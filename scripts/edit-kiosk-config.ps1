@@ -43,11 +43,11 @@ function Read-Input([string]$prompt, [string]$default = '')
 
     if ($default -ne '')
     {
-        $p = "$prompt [$default]: "
+        $p = "${prompt} [$default]: "
     }
     else
     {
-        $p = "$prompt: "
+        $p = "${prompt}: "
     }
 
     $val = Read-Host -Prompt $p
@@ -79,7 +79,7 @@ function Read-YesNo([string]$prompt, [bool]$default = $false)
 
     while ($true)
     {
-        $val = Read-Host -Prompt "$prompt (Y/N) [$d]"
+        $val = Read-Host -Prompt "${prompt} (Y/N) [$d]"
         if ( [string]::IsNullOrWhiteSpace($val))
         {
             return $default

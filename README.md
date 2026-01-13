@@ -147,6 +147,9 @@ This decision tree helps you choose the next action and shows an expected comple
    - Yes: enable auto sign-in via `netplwiz` → 2 min
    - No: do NOT enable auto sign-in — require manual login.
 
+4) install Powershell 7.x
+   👉 https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows
+
 Estimated total time (happy path): 20–45 minutes (create user, assign access, test). If updates or browser install required: 1–2 hours.
 
 ---

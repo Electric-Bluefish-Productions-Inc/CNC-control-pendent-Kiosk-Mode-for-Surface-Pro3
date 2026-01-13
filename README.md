@@ -21,7 +21,6 @@ Note: this document documents the kiosk setup for the Surface device attached to
 
 ## Important security note (network quarantine)
 This Surface **can be** intentionally **quarantined from the Internet** because the control machine runs an older Windows build and must be isolated from external threats.
-Example firewall rules on the gateway (showing the rule that drops Internet access for the control IP):
 
 ```
 [root@server root]# firewall-cmd --direct --get-all-rules
@@ -42,6 +41,35 @@ Evaluation order (most-specific/drop first):
 - Device auto-signs into kiosk account on boot (optional — use only if physically secure).
 - Browser starts automatically in fullscreen kiosk mode to a single URL.
 - Touch keyboard and browser behaviour verified (Edge vs Chrome differences noted below).
+
+---
+
+## New: `scripts/edit-kiosk-config.ps1` — interactive config editor
+
+A new helper script was added to simplify creating and editing your local `scripts/kiosk.config.json`.
+
+Purpose:
+
+- Create or update `scripts/kiosk.config.json` from the provided sample (`scripts/kiosk.config.sample.json`) or defaults.
+- Avoid committing secrets: the script reminds you to use `scripts/generate-kiosk-pwd.ps1` to create an encrypted `scripts/kiosk.pwd` if you need a password.
+
+Usage (interactive):
+
+```powershell
+pwsh -ExecutionPolicy Bypass -File .\scripts\edit-kiosk-config.ps1
+```
+
+Non-interactive (advanced):
+
+```powershell
+pwsh -ExecutionPolicy Bypass -File .\scripts\edit-kiosk-config.ps1 -OutFile .\scripts\kiosk.config.json -NonInteractive -KioskUserName MyKiosk -KioskUrl https://example.local -Browser Edge -EnableAutoLogin $true
+```
+
+Notes:
+
+- The script defaults to recommending a no-password kiosk account. If you want a password, use `scripts/generate-kiosk-pwd.ps1` to generate `scripts/kiosk.pwd` (DPAPI-encrypted) and set
+  `EncryptedPasswordFile` in your config.
+- Do NOT commit `scripts/kiosk.config.json` or `scripts/kiosk.pwd` — they are added to `.gitignore` by default.
 
 ---
 

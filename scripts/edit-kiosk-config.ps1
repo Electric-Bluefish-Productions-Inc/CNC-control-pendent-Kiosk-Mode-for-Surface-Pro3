@@ -195,7 +195,18 @@ if ( $PSBoundParameters.ContainsKey('MinimumBuild'))
 }
 else
 {
-    $m = Read-Input 'Minimum Windows build (e.g. 19041)' [string]$config.MinimumBuild; $config.MinimumBuild = [int]$m
+    # Prompt for minimum build and validate integer input
+    $defaultBuildStr = [string]$config.MinimumBuild
+    $m = Read-Input 'Minimum Windows build (e.g. 19041)' $defaultBuildStr
+    $parsed = 0
+    if ( [int]::TryParse($m, [ref]$parsed))
+    {
+        $config.MinimumBuild = $parsed
+    }
+    else
+    {
+        Write-Warning "Invalid build number entered ('$m'). Using default: $( $config.MinimumBuild )"
+    }
 }
 
 if ( $PSBoundParameters.ContainsKey('InstallEdgeIfMissing'))

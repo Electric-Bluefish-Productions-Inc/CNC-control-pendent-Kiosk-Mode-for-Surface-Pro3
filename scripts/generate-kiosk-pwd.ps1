@@ -1,3 +1,12 @@
+# #######################################
+# Author: Electric Bluefish Productions Inc.  - James Applebaum
+# Created: Jan 13 2016
+# Project: CNC-control-pendent-Kiosk-Mode-for-Surface-Pro3
+# File: generate-kiosk-pwd.ps1
+# Description: Helper to create a DPAPI-encrypted password file for kiosk setup (kiosk.pwd). Defaults to not creating a password.
+#
+# #######################################
+
 <#
 Generate an encrypted password file for kiosk setup (scripts/kiosk.pwd)
 

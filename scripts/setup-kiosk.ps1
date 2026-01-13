@@ -1,3 +1,13 @@
+# #######################################
+# Author: Electric Bluefish Productions Inc.  - James Applebaum
+# Created: Jan 13 2016
+# Project: CNC-control-pendent-Kiosk-Mode-for-Surface-Pro3
+# File: setup-kiosk.ps1
+# Description: Main helper script to create/configure a local kiosk user, enable optional auto-login,
+#              install Edge if requested, and register a scheduled task to launch the browser in kiosk mode.
+#
+# #######################################
+
 <#
 PowerShell kiosk setup helper (configurable)
 - Reads configuration from a JSON file (optional)

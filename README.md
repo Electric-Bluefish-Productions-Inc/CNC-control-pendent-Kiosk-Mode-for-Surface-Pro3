@@ -1,3 +1,14 @@
+<!--
+#######################################
+Author: Electric Bluefish Productions Inc.  - James Applebaum
+Created: Jan 13 2016
+Project: CNC-control-pendent-Kiosk-Mode-for-Surface-Pro3
+File: README.md
+Description: Project README for kiosk setup and decision tree.
+
+#######################################
+-->
+
 # Microsoft Surface Pro (kiosk) for CNC pendent — setup & decision tree
 
 Note: this document documents the kiosk setup for the Surface device attached to the laser table. The instructions target a Windows Surface device (title referenced Surface Pro 8); the kiosk steps apply to Surface Pro 3+ devices running Windows 10/11. If your device or Windows version differs, see the decision tree below.

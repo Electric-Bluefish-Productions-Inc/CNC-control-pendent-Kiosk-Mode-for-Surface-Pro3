@@ -1,3 +1,12 @@
+# #######################################
+# Author: Electric Bluefish Productions Inc.  - James Applebaum
+# Created: Jan 13 2016
+# Project: CNC-control-pendent-Kiosk-Mode-for-Surface-Pro3
+# File: Setup-Kiosk.Tests.ps1
+# Description: Pester tests for setup-kiosk scripts; includes unit tests for decision logic and safe CLI invocation tests.
+#
+# #######################################
+
 # Try to import Pester; if it's not available, exit gracefully so CI or manual runs don't error hard.
 $hasPester = $false
 try

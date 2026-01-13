@@ -1,11 +1,5 @@
 # Microsoft Surface Pro (kiosk) — setup & decision tree
 
-[![Windows Pester Tests](https://github.com/Electric-Bluefish-Productions-Inc/CNC-control-pendent-Kiosk-Mode-for-Surface-Pro3/actions/workflows/windows-pester.yml/badge.svg)](https://github.com/Electric-Bluefish-Productions-Inc/CNC-control-pendent-Kiosk-Mode-for-Surface-Pro3/actions/workflows/windows-pester.yml)
-
-
-
-[![Windows Pester Tests](https://img.shields.io/github/actions/workflow/status/Electric-Bluefish-Productions-Inc/CNC-control-pendent-Kiosk-Mode-for-Surface-Pro3/.github/workflows/windows-pester.yml?label=windows%20pester&logo=github&style=flat)](https://github.com/Electric-Bluefish-Productions-Inc/CNC-control-pendent-Kiosk-Mode-for-Surface-Pro3/actions/workflows/windows-pester.yml)
-
 Note: this document documents the kiosk setup for the Surface device attached to the laser table. The instructions target a Windows Surface device (title referenced Surface Pro 8); the kiosk steps apply to Surface Pro 3+ devices running Windows 10/11. If your device or Windows version differs, see the decision tree below.
 
 ---

@@ -16,6 +16,10 @@ if (-not $hasPester)
     exit 0
 }
 
+# Detect if pwsh (PowerShell 7+) is available for Start-Process tests
+$pwshCmd = Get-Command pwsh -ErrorAction SilentlyContinue
+$hasPwsh = $pwshCmd -ne $null
+
 # Dot-source the script so its functions (like Should-EnableAutoLogin) are available for unit tests.
 . (Join-Path $PSScriptRoot '../scripts/setup-kiosk.ps1')
 
@@ -25,6 +29,11 @@ Describe 'setup-kiosk.ps1 basic checks' {
     }
 
     It 'runs in WhatIf mode without errors' {
+        if (-not $hasPwsh)
+        {
+            Skip "pwsh not available on this runner; skipping CLI invocation test."
+        }
+
         # Create a temporary config file to avoid touching real config
         $tmp = Join-Path $PSScriptRoot 'tmp-test-config.json'
         $cfg = @{ KioskUserName = 'testkiosk'; KioskFullName = 'Test Kiosk'; KioskUrl = 'https://example.local'; Browser = 'Edge'; EnableAutoLogin = $false; InstallEdgeIfMissing = $false }
@@ -45,6 +54,11 @@ Describe 'setup-kiosk.ps1 basic checks' {
 
 Describe 'generate-kiosk-pwd helper' {
     It 'creates an encrypted password file when supplied a SecureString (non-interactive simulation of Y)' {
+        if (-not $hasPwsh)
+        {
+            Skip "pwsh not available on this runner; skipping generate-kiosk-pwd CLI test."
+        }
+
         $tmpOut = Join-Path $PSScriptRoot 'tmp-kiosk.pwd'
         if (Test-Path $tmpOut)
         {

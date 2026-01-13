@@ -462,7 +462,7 @@ function Invoke-SetupKiosk
 }
 
 # If the script is being run directly (not dot-sourced for tests), invoke the main function
-if ($PSCommandPath -eq $MyInvocation.MyCommand.Path)
+if (($MyInvocation.InvocationName -ne '.') -and ($PSCommandPath -and $MyInvocation.MyCommand.Path -eq $PSCommandPath))
 {
     Invoke-SetupKiosk
 }

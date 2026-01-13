@@ -1,1 +1,10 @@
-<?php
+{
+  "KioskUserName": "REPLACE_WITH_USERNAME",
+  "KioskFullName": "REPLACE_WITH_FULL_NAME",
+  "KioskUrl": "https://example.local/",
+  "Browser": "Edge",
+  "EnableAutoLogin": true,
+  "MinimumBuild": 19045,
+  "InstallEdgeIfMissing": false,
+  "EncryptedPasswordFile": "kiosk.pwd"
+}

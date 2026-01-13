@@ -1,0 +1,29 @@
+name: Windows Pester Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show PowerShell version
+        run: pwsh -NoProfile -Command "$PSVersionTable | Out-String"
+        shell: pwsh
+
+      - name: Install Pester
+        run: |
+          pwsh -NoProfile -Command "Install-Module -Name Pester -Force -Scope CurrentUser"
+        shell: pwsh
+
+      - name: Run Pester tests
+        run: |
+          pwsh -NoProfile -Command "Import-Module Pester; Invoke-Pester -Script .\tests\Setup-Kiosk.Tests.ps1 -Output Detailed"
+        shell: pwsh

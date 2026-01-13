@@ -1,0 +1,8 @@
+# Local kiosk config and secret
+scripts/kiosk.config.json
+scripts/kiosk.pwd
+
+# Editor artifacts
+.vscode/
+*.swp
+.DS_Store

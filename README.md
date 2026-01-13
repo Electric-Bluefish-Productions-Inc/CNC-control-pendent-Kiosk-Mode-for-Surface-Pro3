@@ -2,9 +2,7 @@
 
 [![Windows Pester Tests](https://github.com/Electric-Bluefish-Productions-Inc/CNC-control-pendent-Kiosk-Mode-for-Surface-Pro3/actions/workflows/windows-pester.yml/badge.svg)](https://github.com/Electric-Bluefish-Productions-Inc/CNC-control-pendent-Kiosk-Mode-for-Surface-Pro3/actions/workflows/windows-pester.yml)
 
-Note: replace OWNER/REPO in the badge URL above with your GitHub owner and repository name (for example: `my-org/my-repo`).
 
-Alternatively, use a Shields.io badge (also replace OWNER/REPO):
 
 [![Windows Pester Tests](https://img.shields.io/github/actions/workflow/status/Electric-Bluefish-Productions-Inc/CNC-control-pendent-Kiosk-Mode-for-Surface-Pro3/.github/workflows/windows-pester.yml?label=windows%20pester&logo=github&style=flat)](https://github.com/Electric-Bluefish-Productions-Inc/CNC-control-pendent-Kiosk-Mode-for-Surface-Pro3/actions/workflows/windows-pester.yml)
 

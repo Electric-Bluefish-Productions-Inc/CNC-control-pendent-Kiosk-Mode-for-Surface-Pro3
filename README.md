@@ -9,8 +9,213 @@ Description: Project README for kiosk setup and decision tree.
 #######################################
 -->
 
-# Microsoft Surface Pro (kiosk) for CNC pendent — setup & decision tree
+# Windows Kiosk Setup with On-Screen Keyboard (Surface Pro3 / Touch)
 
+This Manual Process Actually Works!
+
+## ✅ Recommended Kiosk Model (IMPORTANT)
+
+There are **two ways** to do kiosks on Windows:
+
+| Method                                 | Keyboard works? | Recommendation |
+|----------------------------------------|-----------------|----------------|
+| **Assigned Access (single-app kiosk)** | ⚠️ Often broken | ❌ Avoid        |
+| **Auto-login + Explorer shell**        | ✅ Reliable      | ⭐ **Use this** |
+
+👉 **Do NOT use “Set up a kiosk” (Assigned Access)** if you need the touch keyboard.
+
+Instead, use:
+> **Auto-login kiosk user + normal Explorer desktop + fullscreen app**
+
+This gives:
+
+- Touch keyboard
+- Admin escape
+- Stable PowerShell
+- Chrome / Edge compatibility
+
+---
+
+## STEP 1 — Create a kiosk user (standard user)
+
+Open **PowerShell (Admin)**:
+
+```powershell
+net user kioskuser /add
+net localgroup users kioskuser /add
+```
+
+(Do **not** make them admin.)
+
+---
+
+## STEP 2 — Enable auto-login for the kiosk user
+
+1. Press **Win + R**
+2. Run:
+   ```
+   netplwiz
+   ```
+3. Select **kioskuser**
+4. Uncheck:
+   > Users must enter a user name and password
+5. OK → enter password once
+
+Reboot test:
+
+- Machine logs directly into kioskuser
+
+---
+
+## STEP 3 — Force the on-screen keyboard to work
+
+### 3.1 Enable Touch Keyboard service
+
+Open **PowerShell (Admin)**:
+
+```powershell
+Set-Service -Name TabletInputService -StartupType Automatic
+Start-Service TabletInputService
+```
+
+This service is **required** for auto-popup keyboard.
+
+---
+
+### 3.2 Enable keyboard auto-show (registry)
+
+Run as **Admin**:
+
+```powershell
+reg add "HKCU\\Software\\Microsoft\\TabletTip\\1.7" ^
+/v EnableDesktopModeAutoInvoke ^
+/t REG_DWORD /d 1 /f
+```
+
+⚠️ This must be run **while logged in as the kiosk user**
+(or load their registry hive manually).
+
+---
+
+### 3.3 Optional: ensure keyboard shows in tablet mode
+
+**Settings → Devices → Typing**
+Enable:
+
+- ✅ Show the touch keyboard when there’s no keyboard attached
+
+---
+
+## STEP 4 — Launch the kiosk app automatically (fullscreen)
+
+### Example: Chromium Edge kiosk launch
+
+Create a shortcut in:
+
+```
+C:\\Users\\kioskuser\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup
+```
+
+Target:
+
+```text
+"C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
+--kiosk https://laser.applebaum.treehouse/tablet
+--edge-kiosk-type=fullscreen
+```
+
+Edge:
+
+- Triggers touch keyboard correctly
+- Works better than Chrome in kiosks
+
+---
+
+## STEP 5 — Add a manual keyboard fallback (IMPORTANT)
+
+Even with everything correct, **Windows touch keyboards can fail**.
+
+Add a **visible keyboard button**.
+
+### Pin Touch Keyboard executable
+
+Target:
+
+```text
+C:\\Program Files\\Common Files\\microsoft shared\\ink\\TabTip.exe
+```
+
+Pin it to:
+
+- Taskbar
+- Or Desktop
+
+This guarantees keyboard access.
+
+---
+
+## STEP 6 — Admin escape hatch (DO THIS)
+
+Make sure you can **exit kiosk mode**:
+
+- **Ctrl + Alt + Del** → Sign out
+- Log in as **admin**
+- Or Task Manager → Run → `explorer.exe`
+
+Never remove Explorer shell unless you enjoy recovery installs.
+
+---
+
+## ✅ Resulting behavior
+
+✔ Auto-login  
+✔ Fullscreen kiosk app  
+✔ Touch keyboard auto-pops  
+✔ Manual keyboard fallback  
+✔ Admin can escape safely  
+✔ No Assigned Access traps
+
+---
+
+## ❌ What NOT to do
+
+- ❌ Windows “Set up a kiosk”
+- ❌ Assigned Access + Chrome
+- ❌ Shell replacement
+- ❌ Disabling Explorer
+- ❌ Removing admin access
+
+---
+
+## Quick verification checklist
+
+Log in as kiosk user and test:
+
+```powershell
+services.msc
+```
+
+Confirm:
+
+- `TabletInputService` = **Running**
+
+Tap a text field:
+
+- Keyboard appears → success
+  """
+
+path = "/mnt/data/README.md"
+with open(path, "w", encoding="utf-8") as f:
+f.write(content)
+
+path
+___
+############################################################################################
+___
+
+# Microsoft Surface Pro (kiosk) for CNC pendent — setup scripts & decision tree
+
+**There are aspects of this that did work, but others that were frustrating or just did not accomplish the task.**
 Note: this document documents the kiosk setup for the Surface device attached to the laser table. The instructions target a Windows Surface device the kiosk steps apply to Surface Pro 3+ devices running Windows 10/11. If your device or Windows version differs, see the decision tree below.
 
 ---
@@ -176,7 +381,10 @@ msedge.exe --kiosk https://yourwebsite.com --kiosk-type=fullscreen --no-first-ru
 This repository contains a configurable PowerShell helper script to create a local kiosk user, enable optional auto-login, install Edge (via winget), and register a scheduled task that launches the browser in kiosk mode.
 
 What's new
-- `-ConfirmAutoLogin` (switch) added to `scripts/setup-kiosk.ps1`: AutoAdminLogon will NOT be enabled unless this explicit flag is supplied (or `ConfirmAutoLogin: true` is set in the config). This reduces accidental insecure auto-login.
+
+- Default behavior: the script now prefers a local `scripts/kiosk.config.json` by default (new parameter `-PreferConfig` is `true` by default). This makes the config file the canonical source of truth
+  for installs; to let CLI parameters override the config, run with `-PreferConfig:$false`.
+- `-DisableAutoLogin` opt-out now requires explicit confirmation from the CLI (`-Yes`) to prevent accidental insecure changes.
 - `scripts/generate-kiosk-pwd.ps1` helper added: interactively creates a DPAPI-encrypted `scripts/kiosk.pwd` file when you explicitly choose to provide a password. Default behaviour is to NOT create a password file (recommended).
 - Tests: `tests/Setup-Kiosk.Tests.ps1` now gracefully skips when Pester is not installed and includes a non-interactive test that verifies `generate-kiosk-pwd.ps1` writes a password file when supplied a SecureString.
 
@@ -218,26 +426,44 @@ $secure = ConvertTo-SecureString 'StrongPass123!' -AsPlainText -Force
 pwsh -ExecutionPolicy Bypass -File .\scripts\generate-kiosk-pwd.ps1 -OutFile .\scripts\kiosk.pwd -PasswordSecureString $secure -Force
 ```
 
-Usage examples
-- Dry-run to review changes (recommended):
+Usage examples (config-first behavior)
+
+- Dry-run to review changes using the local config (recommended):
 
 ```powershell
 pwsh -ExecutionPolicy Bypass -File .\scripts\setup-kiosk.ps1 -WhatIf
 ```
 
-- Typical run creating user (auto-login enabled by default):
+- Real install using the created local config (run this in an elevated PowerShell — "Run as Administrator"):
 
 ```powershell
-pwsh -ExecutionPolicy Bypass -File .\scripts\setup-kiosk.ps1 -KioskUserName GuestKiosk -KioskUrl "https://example.local" -Browser Edge -EnableAutoLogin $true -InstallEdgeIfMissing
+# Open an elevated shell first, then run:
+pwsh -ExecutionPolicy Bypass -File .\scripts\setup-kiosk.ps1
 ```
 
-To explicitly disable auto-login for this run:
+- Attempt install and have the script install Edge if missing (elevated):
 
 ```powershell
-pwsh -ExecutionPolicy Bypass -File .\scripts\setup-kiosk.ps1 -KioskUserName GuestKiosk -KioskUrl "https://example.local" -Browser Edge -EnableAutoLogin $true -InstallEdgeIfMissing -DisableAutoLogin -Yes
+pwsh -ExecutionPolicy Bypass -File .\scripts\setup-kiosk.ps1 -InstallEdgeIfMissing
 ```
 
-Note: Disabling auto-login from the command line requires an explicit confirmation flag (`-Yes`) to avoid accidental opt-outs. If you prefer to permanently opt out via config, set `"DisableAutoLogin": true` in `scripts/kiosk.config.json`.
+- Explicitly disable auto-login from the CLI (requires confirmation flag -Yes):
+
+```powershell
+pwsh -ExecutionPolicy Bypass -File .\scripts\setup-kiosk.ps1 -DisableAutoLogin -Yes
+```
+
+- Force CLI parameters to override the config (previous behavior):
+
+```powershell
+pwsh -ExecutionPolicy Bypass -File .\scripts\setup-kiosk.ps1 -PreferConfig:$false -KioskUserName GuestKiosk -KioskUrl "https://example.local" -Browser Edge -WhatIf
+```
+
+- Provide an explicit browser executable path if automatic detection misses your msedge.exe:
+
+```powershell
+pwsh -ExecutionPolicy Bypass -File .\scripts\setup-kiosk.ps1 -BrowserPath "C:\Program Files\Microsoft\Edge\Application\msedge.exe" -WhatIf
+```
 
 Pester tests
 - Tests are intentionally safe and conservative:

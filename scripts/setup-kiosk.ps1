@@ -37,54 +37,114 @@ param(
     [switch]$InstallEdgeIfMissing,
     [switch]$WhatIf,
     [switch]$DisableAutoLogin,
-    [switch]$Yes
+    [switch]$Yes,
+    [string]$BrowserPath = '',
+    [bool]$PreferConfig = $true
 )
 
-# Load JSON config if present and override parameters
+# Prefer a config file located in the scripts directory (local to the helper). This allows keeping
+# per-target configuration next to the scripts. Fall back to the parent-level config for backward compatibility.
+$localConfig = Join-Path $PSScriptRoot 'kiosk.config.json'
+if (Test-Path $localConfig)
+{
+    $ConfigPath = $localConfig
+}
+
+# Load JSON config if present and apply precedence depending on PreferConfig
 if (Test-Path $ConfigPath)
 {
     try
     {
         $cfg = Get-Content -Raw -Path $ConfigPath | ConvertFrom-Json
-        if ($null -ne $cfg.KioskUserName)
+
+        if ($PreferConfig)
         {
-            $KioskUserName = $cfg.KioskUserName
-        }
-        if ($null -ne $cfg.KioskFullName)
-        {
-            $KioskFullName = $cfg.KioskFullName
-        }
-        if ($null -ne $cfg.KioskUrl)
-        {
-            $KioskUrl = $cfg.KioskUrl
-        }
-        if ($null -ne $cfg.Browser)
-        {
-            $Browser = $cfg.Browser
-        }
-        if ($null -ne $cfg.EnableAutoLogin)
-        {
-            $EnableAutoLogin = [bool]$cfg.EnableAutoLogin
-        }
-        if ($null -ne $cfg.MinimumBuild)
-        {
-            $MinimumBuild = [int]$cfg.MinimumBuild
-        }
-        if ($null -ne $cfg.InstallEdgeIfMissing)
-        {
-            if ($cfg.InstallEdgeIfMissing)
+            Write-Host "PreferConfig is enabled: using values from config file: $ConfigPath" -ForegroundColor Cyan
+            # When preferring config, use whatever the config provides (if present)
+            if ($null -ne $cfg.KioskUserName)
+            {
+                $KioskUserName = $cfg.KioskUserName
+            }
+            if ($null -ne $cfg.KioskFullName)
+            {
+                $KioskFullName = $cfg.KioskFullName
+            }
+            if ($null -ne $cfg.KioskUrl)
+            {
+                $KioskUrl = $cfg.KioskUrl
+            }
+            if ($null -ne $cfg.Browser)
+            {
+                $Browser = $cfg.Browser
+            }
+            if ($null -ne $cfg.EnableAutoLogin)
+            {
+                $EnableAutoLogin = [bool]$cfg.EnableAutoLogin
+            }
+            if ($null -ne $cfg.MinimumBuild)
+            {
+                $MinimumBuild = [int]$cfg.MinimumBuild
+            }
+            if ($null -ne $cfg.InstallEdgeIfMissing -and $cfg.InstallEdgeIfMissing)
             {
                 $InstallEdgeIfMissing = $true
             }
+
+            # Backwards-compatible handling for DisableAutoLogin / ConfirmAutoLogin
+            if ($null -ne $cfg.DisableAutoLogin)
+            {
+                $DisableAutoLogin = [bool]$cfg.DisableAutoLogin
+            }
+            elseif ($null -ne $cfg.ConfirmAutoLogin)
+            {
+                $DisableAutoLogin = -not [bool]$cfg.ConfirmAutoLogin
+            }
+
+            # Note: CLI parameters are ignored when PreferConfig is true. To allow CLI overrides, run with -PreferConfig:$false
         }
-        # Backwards-compatible handling: new opt-out flag is DisableAutoLogin. Older configs might include ConfirmAutoLogin (bool)
-        if ($null -ne $cfg.DisableAutoLogin)
+        else
         {
-            $DisableAutoLogin = [bool]$cfg.DisableAutoLogin
-        }
-        elseif ($null -ne $cfg.ConfirmAutoLogin)
-        {
-            $DisableAutoLogin = -not [bool]$cfg.ConfirmAutoLogin
+            # Existing behavior: CLI parameters override config values
+            if (-not $PSBoundParameters.ContainsKey('KioskUserName') -and ($null -ne $cfg.KioskUserName))
+            {
+                $KioskUserName = $cfg.KioskUserName
+            }
+            if (-not $PSBoundParameters.ContainsKey('KioskFullName') -and ($null -ne $cfg.KioskFullName))
+            {
+                $KioskFullName = $cfg.KioskFullName
+            }
+            if (-not $PSBoundParameters.ContainsKey('KioskUrl') -and ($null -ne $cfg.KioskUrl))
+            {
+                $KioskUrl = $cfg.KioskUrl
+            }
+            if (-not $PSBoundParameters.ContainsKey('Browser') -and ($null -ne $cfg.Browser))
+            {
+                $Browser = $cfg.Browser
+            }
+            if (-not $PSBoundParameters.ContainsKey('EnableAutoLogin') -and ($null -ne $cfg.EnableAutoLogin))
+            {
+                $EnableAutoLogin = [bool]$cfg.EnableAutoLogin
+            }
+            if (-not $PSBoundParameters.ContainsKey('MinimumBuild') -and ($null -ne $cfg.MinimumBuild))
+            {
+                $MinimumBuild = [int]$cfg.MinimumBuild
+            }
+            if (-not $PSBoundParameters.ContainsKey('InstallEdgeIfMissing') -and ($null -ne $cfg.InstallEdgeIfMissing))
+            {
+                if ($cfg.InstallEdgeIfMissing)
+                {
+                    $InstallEdgeIfMissing = $true
+                }
+            }
+
+            if (-not $PSBoundParameters.ContainsKey('DisableAutoLogin') -and ($null -ne $cfg.DisableAutoLogin))
+            {
+                $DisableAutoLogin = [bool]$cfg.DisableAutoLogin
+            }
+            elseif (-not $PSBoundParameters.ContainsKey('DisableAutoLogin') -and ($null -ne $cfg.ConfirmAutoLogin))
+            {
+                $DisableAutoLogin = -not [bool]$cfg.ConfirmAutoLogin
+            }
         }
     }
     catch
@@ -152,9 +212,12 @@ function Check-WindowsBuild
 function Ensure-Edge
 {
     param([switch]$InstallIfMissing)
+
+    # Common installation paths (system & per-user)
     $paths = @(
         "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe",
-        "$env:ProgramFiles(x86)\Microsoft\Edge\Application\msedge.exe"
+        "$env:ProgramFiles(x86)\Microsoft\Edge\Application\msedge.exe",
+        "$env:LOCALAPPDATA\Microsoft\Edge\Application\msedge.exe"
     )
 
     foreach ($p in $paths)
@@ -162,6 +225,45 @@ function Ensure-Edge
         if (Test-Path $p)
         {
             return $p
+        }
+    }
+
+    # Check if msedge.exe is on the PATH (Get-Command)
+    $cmd = Get-Command msedge.exe -ErrorAction SilentlyContinue
+    if ($cmd -and $cmd.Source)
+    {
+        if (Test-Path $cmd.Source)
+        {
+            return $cmd.Source
+        }
+    }
+
+    # Check App Paths registry keys (HKLM and HKCU)
+    $appPathKeys = @(
+        'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\msedge.exe',
+        'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\msedge.exe'
+    )
+    foreach ($rk in $appPathKeys)
+    {
+        try
+        {
+            $prop = Get-ItemProperty -Path $rk -ErrorAction SilentlyContinue
+            if ($null -ne $prop)
+            {
+                # Default value may be in the (default) property or the Path value
+                $candidate = $prop.'(default)'
+                if (-not $candidate)
+                {
+                    $candidate = $prop.Path
+                }
+                if ($candidate -and (Test-Path $candidate))
+                {
+                    return $candidate
+                }
+            }
+        }
+        catch
+        {
         }
     }
 
@@ -201,6 +303,22 @@ function Ensure-Edge
 function Get-BrowserPath
 {
     param([string]$browser)
+
+    # If caller explicitly provided a browser executable path, validate and return it
+    if ($BrowserPath -and ($BrowserPath.Trim() -ne ''))
+    {
+        if (Test-Path $BrowserPath)
+        {
+            Write-Host "Using explicit BrowserPath: $BrowserPath" -ForegroundColor Cyan
+            return $BrowserPath
+        }
+        else
+        {
+            Write-Warning "Provided BrowserPath not found: $BrowserPath"
+            # continue to fallback detection
+        }
+    }
+
     switch ($browser)
     {
         'Edge' {
@@ -218,7 +336,7 @@ function Get-BrowserPath
                     return $p
                 }
             }
-            Write-Warning "Chrome not found in Program Files. Install Chrome or provide path manually."
+            Write-Warning "Chrome not found in Program Files. Install Chrome or provide path manually via -BrowserPath."
             return $null
         }
         default {
